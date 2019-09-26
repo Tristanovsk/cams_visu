@@ -27,11 +27,20 @@ extent = [-180, 180, 65, 90]  # [90,180, 71, 78]
 cmap = cm.tools.crop_by_percent(cm.cm.delta,30,which='both')
 cice = cm.tools.crop_by_percent(cm.cm.ice, 25, which='min')
 caero = cm.tools.crop_by_percent(cmap, 20, which='max')
+year = 2014
 
-for year in np.arange(2004, 2018):
+aspect_ratio =1
+years = np.arange(2004, 2018)
+rows = len(years)
+fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
+
+for idx, year in enumerate(years):
     file = '/local/AIX/tristan.harmel/project/ardyna/cams/data/cams_artic_jul_aug_' + str(year) + '.nc'
+    file_ice = '/local/AIX/tristan.harmel/project/ardyna/cams/data/era5_ice_artic_jul_aug_' + str(year) + '.nc'
 
     ds = xr.open_dataset(file)
+
+    ds_ice = xr.open_dataset(file_ice)
 
     if(generate_daily):
         for i in range(0, ds.time.shape[0], 4):
@@ -60,20 +69,37 @@ for year in np.arange(2004, 2018):
             plt.close()
 
     # ----------------------------------
-    # format data into timeseries
+    # plot climatology data
     # ----------------------------------
 
-    roi1 = [[50, 70], [120, 70], [120, 80], [50, 80]]
-    roi2 = [[30, 80], [150, 80], [150, 87], [30, 87]]
+    # ----- aod
+    aod_mean = ds.aod550.mean(dim=('time'))
+    aod_sum = ds.aod550.sum(dim=('time'))
+
+    # ----- ice
+    ice_mean = ds_ice.siconc.mean(dim=('time'))
+
+
+
+
+    # ----------------------------------
+    # format data into timeseries
+    # ----------------------------------
+    lat_min1, lat_max1, lon_min1, lon_max1 = 70, 80, 90, 160
+    lat_min2, lat_max2, lon_min2, lon_max2 = 80, 87, 90, 170
+
+    roi1 = [[lon_min1, lat_min1], [lon_max1, lat_min1], [lon_max1, lat_max1], [lon_min1, lat_max1]]
+    roi2 = [[lon_min2, lat_min2], [lon_max2, lat_min2], [lon_max2, lat_max2], [lon_min2, lat_max2]]
     roi = [roi1, roi2]
     id = [0, 1]
     name = ['roi_laptev', 'roi_laptev_north']
     abbrev = ['roi1', 'roi2']
     mask = regionmask.Regions_cls('roi', id, name, abbrev, roi)
     mask_ = mask.mask(ds, lon_name='longitude', lat_name='latitude')
+    mask_ice = mask.mask(ds_ice, lon_name='longitude', lat_name='latitude')
+
 
     # ----- aod
-    aod_mean = ds.aod550.mean(dim=('time'))
     # ts_aod = ds.aod550.mean(dim=('latitude','longitude'))
     aod = ds.aod550.where(mask_ == 0)
     ts_aod_roi1 = aod.mean(dim=('latitude', 'longitude'))
@@ -85,10 +111,9 @@ for year in np.arange(2004, 2018):
     ts_aod_roi2 = aod.mean(dim=('latitude', 'longitude'))
 
     # ----- ice
-    ice_mean = ds.siconc.mean(dim=('time'))
-    ice = ds.siconc.where(mask_ == 0)
+    ice = ds_ice.siconc.where(mask_ice == 0)
     ts_ice_roi1 = ice.mean(dim=('latitude', 'longitude'))
-    ice = ds.siconc.where(mask_ == 1)
+    ice = ds_ice.siconc.where(mask_ice == 1)
     ts_ice_roi2 = ice.mean(dim=('latitude', 'longitude'))
     # ts_ice25_roi2 = ice.quantile(0.25, dim=('latitude', 'longitude'))
     # ts_ice75_roi2 = ice.quantile(0.75, dim=('latitude', 'longitude'))
@@ -134,12 +159,13 @@ for year in np.arange(2004, 2018):
     #p.set_clim(0, 0.6)
 
     ax = plt.subplot(G[1, 3:])
-    ts_ice_roi2.plot(label='roi1')
+    ts_ice_roi1.plot(label='roi1')
     ts_ice_roi2.plot(label='roi2')
     #plt.fill_between(ts_ice_roi2.time.values, ts_ice25_roi2.values, ts_ice75_roi2.values, alpha=.4)
     plt.legend(ncol=2)
-
-    plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_artic_' + str(year) + '.png'), dpi=300)
+    plt.suptitle('Aerosol and ice; Jul-Aug '+str(year))
+    plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_era5_artic_' + str(year) + '.png'), dpi=300)
     plt.close()
+
 
 
