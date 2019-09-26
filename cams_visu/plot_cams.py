@@ -15,8 +15,9 @@ import regionmask
 
 from matplotlib.backends.backend_pdf import PdfPages
 
-generate_daily=False
-ofig = '/local/AIX/tristan.harmel/project/ardyna/cams/fig/'
+generate_daily = False
+ofig = './figures'
+idir = '/local/AIX/tristan.harmel/project/ardyna/cams/data'
 
 land_feat = cpy.feature.NaturalEarthFeature('physical', 'land', '50m',
                                             edgecolor='face', facecolor=cpy.feature.COLORS['land'])
@@ -24,25 +25,25 @@ land_feat = cpy.feature.NaturalEarthFeature('physical', 'land', '50m',
 crs = ccrs.NearsidePerspective(100, 71)
 extent = [-180, 180, 65, 90]  # [90,180, 71, 78]
 
-cmap = cm.tools.crop_by_percent(cm.cm.delta,30,which='both')
+cmap = cm.tools.crop_by_percent(cm.cm.delta, 30, which='both')
 cice = cm.tools.crop_by_percent(cm.cm.ice, 25, which='min')
 caero = cm.tools.crop_by_percent(cmap, 20, which='max')
 year = 2014
 
-aspect_ratio =1
+aspect_ratio = 1
 years = np.arange(2004, 2018)
 rows = len(years)
 fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
 
 for idx, year in enumerate(years):
-    file = '/local/AIX/tristan.harmel/project/ardyna/cams/data/cams_artic_jul_aug_' + str(year) + '.nc'
-    file_ice = '/local/AIX/tristan.harmel/project/ardyna/cams/data/era5_ice_artic_jul_aug_' + str(year) + '.nc'
+    file = os.path.join(idir, 'cams_artic_jul_aug_' + str(year) + '.nc')
+    file_ice = os.path.join(idir, 'era5_ice_artic_jul_aug_' + str(year) + '.nc')
 
     ds = xr.open_dataset(file)
 
     ds_ice = xr.open_dataset(file_ice)
 
-    if(generate_daily):
+    if (generate_daily):
         for i in range(0, ds.time.shape[0], 4):
             print(i)
             plt.figure(figsize=(15, 7))
@@ -57,14 +58,13 @@ for idx, year in enumerate(years):
             p = ds.aod550.isel(time=i).plot(ax=ax, transform=ccrs.PlateCarree(), cmap=caero,
                                             cbar_kwargs=dict(pad=.1, aspect=20, shrink=0.6))
             p.set_clim(0, 1)
-    
 
             ax = plt.subplot(1, 2, 2, projection=crs)
             ax.set_extent([-180, 180, 50, 90], crs=ccrs.PlateCarree())
             ax.coastlines()
             ds.siconc.isel(time=i).plot(ax=ax, transform=ccrs.PlateCarree(), cmap=cice,
                                         cbar_kwargs=dict(pad=.1, aspect=20, shrink=0.6))
-    
+
             plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_artic_' + str(ds.time[i].values)[:10] + '.png'))
             plt.close()
 
@@ -78,9 +78,6 @@ for idx, year in enumerate(years):
 
     # ----- ice
     ice_mean = ds_ice.siconc.mean(dim=('time'))
-
-
-
 
     # ----------------------------------
     # format data into timeseries
@@ -97,7 +94,6 @@ for idx, year in enumerate(years):
     mask = regionmask.Regions_cls('roi', id, name, abbrev, roi)
     mask_ = mask.mask(ds, lon_name='longitude', lat_name='latitude')
     mask_ice = mask.mask(ds_ice, lon_name='longitude', lat_name='latitude')
-
 
     # ----- aod
     # ts_aod = ds.aod550.mean(dim=('latitude','longitude'))
@@ -124,9 +120,9 @@ for idx, year in enumerate(years):
 
     plt.figure(figsize=(15, 7))
     # create subplot grid
-    G = gridspec.GridSpec(2, 8, left=0.01, wspace=0.25,hspace=0.25)
+    G = gridspec.GridSpec(2, 8, left=0.01, wspace=0.25, hspace=0.25)
 
-# ----- aod
+    # ----- aod
     ax = plt.subplot(G[0, :3], projection=crs)
     ax.set_extent(extent, crs=ccrs.PlateCarree())
     # ax.add_feature(land_feat)
@@ -146,7 +142,7 @@ for idx, year in enumerate(years):
     plt.fill_between(ts_aod_roi2.time.values, ts_aod25_roi2.values, ts_aod75_roi2.values, alpha=.4)
     plt.legend(ncol=2)
 
-# ----- ice
+    # ----- ice
     ax = plt.subplot(G[1, :3], projection=crs)
     ax.set_extent(extent, crs=ccrs.PlateCarree())
     ax.add_feature(land_feat)
@@ -154,18 +150,15 @@ for idx, year in enumerate(years):
     ax.gridlines()
     ax.coastlines('50m', linewidth=0.5)
 
-    #mask.plot(ax=ax, regions=[0, 1], add_ocean=False, coastlines=False, label='abbrev', )
+    # mask.plot(ax=ax, regions=[0, 1], add_ocean=False, coastlines=False, label='abbrev', )
     p = ice_mean.plot(ax=ax, transform=ccrs.PlateCarree(), cmap=cice, cbar_kwargs=dict(pad=.01, aspect=20, shrink=0.8))
-    #p.set_clim(0, 0.6)
+    # p.set_clim(0, 0.6)
 
     ax = plt.subplot(G[1, 3:])
     ts_ice_roi1.plot(label='roi1')
     ts_ice_roi2.plot(label='roi2')
-    #plt.fill_between(ts_ice_roi2.time.values, ts_ice25_roi2.values, ts_ice75_roi2.values, alpha=.4)
+    # plt.fill_between(ts_ice_roi2.time.values, ts_ice25_roi2.values, ts_ice75_roi2.values, alpha=.4)
     plt.legend(ncol=2)
-    plt.suptitle('Aerosol and ice; Jul-Aug '+str(year))
+    plt.suptitle('Aerosol and ice; Jul-Aug ' + str(year))
     plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_era5_artic_' + str(year) + '.png'), dpi=300)
     plt.close()
-
-
-
