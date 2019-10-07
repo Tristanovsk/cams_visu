@@ -14,6 +14,7 @@ import xarray as xr
 import regionmask
 
 from matplotlib.backends.backend_pdf import PdfPages
+from cams_visu import utils as u
 
 generate_daily = False
 ofig = './figures'
@@ -34,6 +35,10 @@ aspect_ratio = 1
 years = np.arange(2004, 2018)
 rows = len(years)
 fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
+
+# files = os.path.join(idir, 'cams_artic_jul_aug_*.nc')
+# ds = xr.open_mfdataset(files, concat_dim='time', preprocess=u.get_time, mask_and_scale=True, engine='netcdf4')
+
 
 for idx, year in enumerate(years):
     file = os.path.join(idir, 'cams_artic_jul_aug_' + str(year) + '.nc')
@@ -141,7 +146,7 @@ for idx, year in enumerate(years):
     ts_aod_roi2.plot(label='roi2')
     plt.fill_between(ts_aod_roi2.time.values, ts_aod25_roi2.values, ts_aod75_roi2.values, alpha=.4)
     plt.legend(ncol=2)
-
+    plt.ylim([0,1])
     # ----- ice
     ax = plt.subplot(G[1, :3], projection=crs)
     ax.set_extent(extent, crs=ccrs.PlateCarree())
@@ -149,6 +154,7 @@ for idx, year in enumerate(years):
     ax.grid()
     ax.gridlines()
     ax.coastlines('50m', linewidth=0.5)
+
 
     # mask.plot(ax=ax, regions=[0, 1], add_ocean=False, coastlines=False, label='abbrev', )
     p = ice_mean.plot(ax=ax, transform=ccrs.PlateCarree(), cmap=cice, cbar_kwargs=dict(pad=.01, aspect=20, shrink=0.8))
@@ -159,6 +165,7 @@ for idx, year in enumerate(years):
     ts_ice_roi2.plot(label='roi2')
     # plt.fill_between(ts_ice_roi2.time.values, ts_ice25_roi2.values, ts_ice75_roi2.values, alpha=.4)
     plt.legend(ncol=2)
+    plt.ylim([0, 1])
     plt.suptitle('Aerosol and ice; Jul-Aug ' + str(year))
     plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_era5_artic_' + str(year) + '.png'), dpi=300)
     plt.close()
