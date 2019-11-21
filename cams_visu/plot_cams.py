@@ -33,7 +33,7 @@ caero = cm.tools.crop_by_percent(cmap, 20, which='max')
 year = 2014
 
 aspect_ratio = 1
-years = np.arange(2004, 2018)
+years = np.arange(2014, 2018)
 rows = len(years)
 fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
 
@@ -156,6 +156,8 @@ for idx, year in enumerate(years):
     # ----------------------------------
     lat_min1, lat_max1, lon_min1, lon_max1 = 70, 80, 90, 160
     lat_min2, lat_max2, lon_min2, lon_max2 = 80, 87, 90, 170
+    lat_min1, lat_max1, lon_min1, lon_max1 = 79, 80.4, 112, 140
+    lat_min2, lat_max2, lon_min2, lon_max2 = 80.45, 87, 128, 155
 
     roi1 = [[lon_min1, lat_min1], [lon_max1, lat_min1], [lon_max1, lat_max1], [lon_min1, lat_max1]]
     roi2 = [[lon_min2, lat_min2], [lon_max2, lat_min2], [lon_max2, lat_max2], [lon_min2, lat_max2]]
