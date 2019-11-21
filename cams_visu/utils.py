@@ -8,7 +8,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 
 
-def get_time(ds, key='start_date'):
+def get_time(ds, key='time'):
     if key in ds.attrs.keys():
         grid_time = pd.to_datetime(ds.attrs[key])
         return ds.assign(time=grid_time)
