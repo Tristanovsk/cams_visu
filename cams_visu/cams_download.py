@@ -104,17 +104,17 @@ def download_erainterim(target, date, time='00:00:00', grid='0.125/0.125',
     server = None
     return
 
-for year in np.arange(2004,2018):
+for year in np.arange(2018,2020):
 
-    # target='/local/AIX/tristan.harmel/project/ardyna/cams/data/cams_artic_jul_aug_'+str(year)+'.nc'
-    # if os.path.isfile(target): continue
-    # print('downloading CAMS files...' + str(target))
-    # startDate = '%04d%02d%02d' % (year,7, 1)
-    # lastDate = '%04d%02d%02d' % (year,8,31)
-    # param='125.210/137.128/151.128/165.128/166.128/167.128/206.128/207.210/213.210/214.210/215.210/216.210/31.128/34.128'
-    # data_type='cams_reanalysis'
-    # requestDates = startDate + '/TO/' + lastDate
-    # download_erainterim(str(target), requestDates, param=param,data_type=data_type)
+    target='/local/AIX/tristan.harmel/project/ardyna/cams/data/cams_artic_jul_aug_'+str(year)+'.nc'
+    if os.path.isfile(target): continue
+    print('downloading CAMS files...' + str(target))
+    startDate = '%04d%02d%02d' % (year,7, 1)
+    lastDate = '%04d%02d%02d' % (year,8,31)
+    param='125.210/137.128/151.128/165.128/166.128/167.128/206.128/207.210/213.210/214.210/215.210/216.210/31.128/34.128'
+    data_type='cams_reanalysis'
+    requestDates = startDate + '/TO/' + lastDate
+    download_erainterim(str(target), requestDates, param=param,data_type=data_type)
 
 
     target='/local/AIX/tristan.harmel/project/ardyna/cams/data/era5_ice_artic_jul_aug_'+str(year)+'.nc'

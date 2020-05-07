@@ -10,13 +10,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 os.environ['HDF5_USE_FILE_LOCKING']='FALSE'
+plt.ioff()
 
 import xarray as xr
 import regionmask
 
 from matplotlib.backends.backend_pdf import PdfPages
 from cams_visu import utils as u
-
+anomaly = False
 generate_daily = False
 ofig = './figures'
 idir = '/local/AIX/tristan.harmel/project/ardyna/cams/data'
@@ -33,44 +34,45 @@ caero = cm.tools.crop_by_percent(cmap, 20, which='max')
 year = 2014
 
 aspect_ratio = 1
-years = np.arange(2014, 2018)
+years = np.arange(2018, 2020)
 rows = len(years)
-fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
+if anomaly:
+    fig_clima, axs_clima = plt.subplots(nrows=rows, ncols=3, figsize=(15, 4 * rows * aspect_ratio))
 
-# ---------------------------------------------------
-# generate averaged values for anomaly computations
-# ---------------------------------------------------
+    # ---------------------------------------------------
+    # generate averaged values for anomaly computations
+    # ---------------------------------------------------
 
-files = os.path.join(idir, 'cams_artic_jul_aug_*.nc')
-ds = xr.open_mfdataset(files, concat_dim='time')
-param='aod550'
+    files = os.path.join(idir, 'cams_artic_jul_aug_*.nc')
+    ds = xr.open_mfdataset(files, concat_dim='time')
+    param='aod550'
 
-climatology_mean = ds[param].groupby('time.month').mean('time')
-climatology_mean.to_netcdf('aod_climatology.nc')
-climatology_mean.plot(x='longitude', y='latitude', col='month', col_wrap=3)
+    climatology_mean = ds[param].groupby('time.month').mean('time')
+    climatology_mean.to_netcdf('aod_climatology.nc')
+    climatology_mean.plot(x='longitude', y='latitude', col='month', col_wrap=3)
 
 
-plt.figure(figsize=(15, 7))
-ax = plt.subplot(1, 2, 1, projection=crs)
-ax.set_extent(extent, crs=ccrs.PlateCarree())
-ax.add_feature(land_feat)
-ax.grid()
-ax.gridlines()
-ax.coastlines('50m', linewidth=0.5)
-ax.set_extent([-180, 180, 50, 90], crs=ccrs.PlateCarree())
-ax.coastlines()
-p = climatology_mean.isel(month=1).plot(ax=ax, transform=ccrs.PlateCarree(), cmap=caero,
-                                cbar_kwargs=dict(pad=.1, aspect=20, shrink=0.6))
+    plt.figure(figsize=(15, 7))
+    ax = plt.subplot(1, 2, 1, projection=crs)
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    ax.add_feature(land_feat)
+    ax.grid()
+    ax.gridlines()
+    ax.coastlines('50m', linewidth=0.5)
+    ax.set_extent([-180, 180, 50, 90], crs=ccrs.PlateCarree())
+    ax.coastlines()
+    p = climatology_mean.isel(month=1).plot(ax=ax, transform=ccrs.PlateCarree(), cmap=caero,
+                                    cbar_kwargs=dict(pad=.1, aspect=20, shrink=0.6))
 
-climatology_std = ds.groupby('time.month').std('time')
-stand_anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
-                                ds.groupby('time.month'),
-                                climatology_mean, climatology_std)
+    climatology_std = ds.groupby('time.month').std('time')
+    stand_anomalies = xr.apply_ufunc(lambda x, m, s: (x - m) / s,
+                                    ds.groupby('time.month'),
+                                    climatology_mean, climatology_std)
 
-stand_anomalies.mean('location').to_dataframe()[['tmin', 'tmax']].plot()
+    stand_anomalies.mean('location').to_dataframe()[['tmin', 'tmax']].plot()
 
-file_aod_ave = 'aod_ave_'+str(years[0])+'_'+str(years[-1])+'.nc'
-file_ice_ave = 'ice_ave_'+str(years[0])+'_'+str(years[-1])+'.nc'
+    file_aod_ave = 'aod_ave_'+str(years[0])+'_'+str(years[-1])+'.nc'
+    file_ice_ave = 'ice_ave_'+str(years[0])+'_'+str(years[-1])+'.nc'
 
 first = True
 for idx, year in enumerate(years):
@@ -100,8 +102,8 @@ for idx, year in enumerate(years):
 aod_ave_ = aod_ave / (idx+1)
 ice_ave_ = ice_ave / (idx+1)
 
-aod_ave_.to_netcdf(file_aod_ave)
-ice_ave_.to_netcdf(file_ice_ave)
+# aod_ave_.to_netcdf(file_aod_ave)
+# ice_ave_.to_netcdf(file_ice_ave)
 
 # ---------------------------------------------------
 # plot timeseries for absolute and anomaly values
@@ -204,7 +206,7 @@ for idx, year in enumerate(years):
     ax.gridlines()
     ax.coastlines('50m', linewidth=0.5)
 
-    mask.plot(ax=ax, regions=[0, 1], add_ocean=False, coastlines=False, label='abbrev', )
+    mask.plot(ax=ax, regions=[0, 1], add_ocean=False, coastlines=False, label='abbrev' )
     p = aod_mean.plot(ax=ax, transform=ccrs.PlateCarree(), cmap=caero, cbar_kwargs=dict(pad=.01, aspect=20, shrink=0.8))
     p.set_clim(0, 0.6)
 
@@ -239,5 +241,5 @@ for idx, year in enumerate(years):
     plt.savefig(os.path.join(ofig, 'aot_ice_from_cams_era5_artic_' + str(year) + '.png'), dpi=300)
     plt.close()
 
-aod_mean_ = aod_mean_/(idx+1)
-ice_mean_ = ice_mean_/(idx+1)
+# aod_mean_ = aod_mean_/(idx+1)
+# ice_mean_ = ice_mean_/(idx+1)

@@ -28,3 +28,7 @@
 ![image](./aot_ice_from_cams_era5_artic_2016.png)
 ##  2017
 ![image](./aot_ice_from_cams_era5_artic_2017.png)
+##  2018
+![image](./aot_ice_from_cams_era5_artic_2018.png)
+##  2019
+![image](./aot_ice_from_cams_era5_artic_2019.png)
